@@ -2,6 +2,19 @@ import subprocess
 import tkinter
 import tkinter.font as tkFont
 import collections
+from datetime import datetime
+import functools
+
+def log_start_end_time(func):
+    @functools.wraps(func)
+    def wrapped(*args, **kwargs):
+        start = datetime.now()
+        print('%s started at %s' % (func.__name__, start))
+        ans = func(*args, **kwargs)
+        end = datetime.now()
+        print('%s ended at %s (took %s seconds)' % (func.__name__, end, (end - start).total_seconds()))
+        return ans
+    return wrapped
 
 def get(domain, path):
     if ":" in domain:
@@ -302,6 +315,7 @@ class Browser:
             self.render()
         return handler
 
+    @log_start_end_time
     def render(self):
         assert self.tree
         self.canvas.delete('all')
