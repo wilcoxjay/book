@@ -4,7 +4,7 @@ ORDERED_PAGES=preface intro history http graphics text html layout styles chrome
 
 PANDOC_COMMON_ARGS=$(FLAGS) --from markdown --to html --lua-filter=book/filter.lua --fail-if-warnings --metadata-file=config.json
 
-WIDGET_LAB_CODE=lab2.js lab3.js lab5.js
+WIDGET_LAB_CODE=lab2.js lab3.js lab4.js lab5.js
 
 book: $(patsubst book/%.md,www/%.html,$(wildcard book/*.md)) www/rss.xml $(patsubst %,www/widgets/%,$(WIDGET_LAB_CODE))
 blog: $(patsubst blog/%.md,www/blog/%.html,$(wildcard blog/*.md)) www/rss.xml

@@ -120,6 +120,7 @@ class HTMLParser:
         return tag, attributes
 
     def add_text(self, text):
+        breakpoint("text", text, self.unfinished)
         if text.isspace(): return
         self.implicit_tags(None)
         parent = self.unfinished[-1]
@@ -133,6 +134,7 @@ class HTMLParser:
 
     def add_tag(self, tag):
         tag, attributes = self.get_attributes(tag)
+        breakpoint("tag", tag, attributes, self.unfinished)
         if tag.startswith("!"): return
         self.implicit_tags(tag)
 
