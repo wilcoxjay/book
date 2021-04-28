@@ -2,8 +2,8 @@
 <meta charset="utf-8" />
 <link rel="stylesheet" href="widget.css" />
 <style>
-#panes { display: flex; }
-#panes > div { height: 100%; }
+#panes { display: flex; height: 100%; }
+#panes > div { height: 100%; box-sizing: border-box; padding: 10px; }
 #panes > div ol { height: calc(100% - 20px); }
 #panes h2 { font: 16px normal serif; margin: 0 0 4px; }
 #output, #tokens { list-style-position: inside; padding: 0; margin: 0; overflow: auto; }
@@ -16,12 +16,12 @@
 </style>
 
 <figure id="widget">
-  <div id="panes" style="height: 160px;">
-    <div style="width: 160px; border-right: 2px solid #bbb; padding-right: 10px;">
+  <div id="panes">
+    <div style="width: 40%; border-right: 2px solid steelblue;">
       <h2>Token stream</h2>
       <ol id="tokens"></ol>
     </div>
-    <div style="width: 240px; padding-left: 10px;">
+    <div style="width: 60%;">
       <h2>Partial tree</h2>
       <ol id="output"></ol>
     </div>
