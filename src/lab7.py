@@ -16,7 +16,7 @@ from lab4 import Text, Element, print_tree, HTMLParser
 from lab5 import BLOCK_ELEMENTS, layout_mode, DrawRect
 from lab6 import CSSParser, TagSelector, DescendantSelector
 from lab6 import INHERITED_PROPERTIES, style, cascade_priority, compute_style
-from lab6 import DrawText, resolve_url, tree_to_list
+from lab6 import DrawText, resolve_url, tree_to_list, BlockLayout, DocumentLayout
 
 class LineLayout:
     def __init__(self, node, parent, previous):
@@ -104,17 +104,8 @@ class TextLayout:
             "node={}, word={})").format(
             self.x, self.y, self.width, self.height, self.node, self.word)
 
+@wbetools.patch(BlockLayout)
 class BlockLayout:
-    def __init__(self, node, parent, previous):
-        self.node = node
-        self.parent = parent
-        self.previous = previous
-        self.children = []
-        self.x = None
-        self.y = None
-        self.width = None
-        self.height = None
-
     def layout(self):
         wbetools.record("layout_pre", self)
 
@@ -160,13 +151,6 @@ class BlockLayout:
         new_line = LineLayout(self.node, self, last_line)
         self.children.append(new_line)
 
-    def get_font(self, node):
-        weight = node.style["font-weight"]
-        style = node.style["font-style"]
-        if style == "normal": style = "roman"
-        size = int(float(node.style["font-size"][:-2]) * .75)
-        return get_font(size, weight, style)
-
     def text(self, node):
         font = self.get_font(node)
         for word in node.text.split():
@@ -194,31 +178,6 @@ class BlockLayout:
         return "BlockLayout[{}](x={}, y={}, width={}, height={})".format(
             layout_mode(self.node), self.x, self.y, self.width, self.height)
 
-class DocumentLayout:
-    def __init__(self, node):
-        self.node = node
-        self.parent = None
-        self.previous = None
-        self.children = []
-
-    def layout(self):
-        wbetools.record("layout_pre", self)
-        child = BlockLayout(self.node, self, None)
-        self.children.append(child)
-
-        self.width = WIDTH - 2*HSTEP
-        self.x = HSTEP
-        self.y = VSTEP
-        child.layout()
-        self.height = child.height + 2*VSTEP
-        wbetools.record("layout_post", self)
-
-    def paint(self, display_list):
-        self.children[0].paint(display_list)
-
-    def __repr__(self):
-        return "DocumentLayout()"
-
 CHROME_PX = 100
 
 class Tab:
@@ -230,10 +189,11 @@ class Tab:
             self.default_style_sheet = CSSParser(f.read()).parse()
 
     def load(self, url):
-        headers, body = request(url)
         self.scroll = 0
         self.url = url
         self.history.append(url)
+
+        headers, body = request(url)
         self.nodes = HTMLParser(body).parse()
 
         rules = self.default_style_sheet.copy()
