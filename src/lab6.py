@@ -13,7 +13,8 @@ from lab1 import request
 from lab2 import WIDTH, HEIGHT, HSTEP, VSTEP, SCROLL_STEP
 from lab3 import FONTS, get_font
 from lab4 import Text, Element, print_tree, HTMLParser
-from lab5 import BLOCK_ELEMENTS, layout_mode, DrawRect
+from lab5 import BLOCK_ELEMENTS, layout_mode, DrawRect, DrawText
+from lab5 import BlockLayout, DocumentLayout, Browser
 
 def resolve_url(url, current):
     if "://" in url:
@@ -203,46 +204,8 @@ def cascade_priority(rule):
     selector, body = rule
     return selector.priority
 
+@wbetools.patch(BlockLayout)
 class BlockLayout:
-    def __init__(self, node, parent, previous):
-        self.node = node
-        self.parent = parent
-        self.previous = previous
-        self.children = []
-
-        self.display_list = []
-
-    def layout(self):
-        self.width = self.parent.width
-        self.x = self.parent.x
-
-        if self.previous:
-            self.y = self.previous.y + self.previous.height
-        else:
-            self.y = self.parent.y
-
-        mode = layout_mode(self.node)
-        if mode == "block":
-            previous = None
-            for child in self.node.children:
-                next = BlockLayout(child, self, previous)
-                self.children.append(next)
-                previous = next
-        else:
-            self.cursor_x = 0
-            self.cursor_y = 0
-            self.line = []
-            self.recurse(self.node)
-            self.flush()
-
-        for child in self.children:
-            child.layout()
-
-        if mode == "block":
-            self.height = sum([child.height for child in self.children])
-        else:
-            self.height = self.cursor_y
-
     def recurse(self, node):
         if isinstance(node, Text):
             self.text(node)
@@ -301,31 +264,7 @@ class BlockLayout:
         return "BlockLayout[{}](x={}, y={}, width={}, height={})".format(
             layout_mode(self.node), self.x, self.y, self.width, self.height)
 
-class DocumentLayout:
-    def __init__(self, node):
-        self.node = node
-        self.parent = None
-        self.previous = None
-        self.children = []
-
-    def layout(self):
-        wbetools.record("layout_pre", self)
-        child = BlockLayout(self.node, self, None)
-        self.children.append(child)
-
-        self.width = WIDTH - 2*HSTEP
-        self.x = HSTEP
-        self.y = VSTEP
-        child.layout()
-        self.height = child.height + 2*VSTEP
-        wbetools.record("layout_post", self)
-
-    def paint(self, display_list):
-        self.children[0].paint(display_list)
-
-    def __repr__(self):
-        return "DocumentLayout()"
-
+@wbetools.patch(DrawText)
 class DrawText:
     def __init__(self, x1, y1, text, font, color):
         self.top = y1
@@ -348,6 +287,7 @@ class DrawText:
     def __repr__(self):
         return "DrawText(text={})".format(self.text)
 
+@wbetools.patch(Browser)
 class Browser:
     def __init__(self):
         self.window = tkinter.Tk()
@@ -389,18 +329,6 @@ class Browser:
         self.document.layout()
         self.display_list = []
         self.document.paint(self.display_list)
-        self.draw()
-
-    def draw(self):
-        self.canvas.delete("all")
-        for cmd in self.display_list:
-            if cmd.top > self.scroll + HEIGHT: continue
-            if cmd.bottom < self.scroll: continue
-            cmd.execute(self.scroll, self.canvas)
-
-    def scrolldown(self, e):
-        max_y = self.document.height - HEIGHT
-        self.scroll = min(self.scroll + SCROLL_STEP, max_y)
         self.draw()
 
 if __name__ == "__main__":
