@@ -1942,8 +1942,6 @@ class Browser:
                 self.active_tab_height)
             self.scroll = scroll
             self.set_needs_draw()
-            self.lock.release()
-            return
         active_tab = self.tabs[self.active_tab]
         task = Task(active_tab.scrolldown)
         active_tab.task_runner.schedule_task(task)
